@@ -131,7 +131,7 @@ describe('Promise', () => {
             done();
         }, 0);
     });
-    it("2.2.4 失败回调", done => {
+    it('2.2.4 失败回调', done => {
         const fn = sinon.fake();
         const promise = new Promise((resolve, reject) => {
             reject();
@@ -141,20 +141,27 @@ describe('Promise', () => {
         setTimeout(() => {
             assert.isTrue(fn.called);
             done();
-        }, 0);
+        }, 10);
     });
-    it("2.2.5 onFulfilled和onRejected必须被当做函数调用", done => {
+    it('2.2.5 onFulfilled和onRejected必须被当做函数调用', done => {
         const promise = new Promise(resolve => {
             resolve();
         });
-        promise.then(function() {
-            "use strict";
+        promise.then(function () {
+            'use strict';
             assert(this === undefined);
             done();
         });
     });
 
-    it("2.2.6 then可以在同一个promise里被多次调用", done => {
+    it('2.2.7 then必须返回一个promise', () => {
+        const promise = new Promise(() => {
+        });
+        const promise2 = promise.then();
+        // @ts-ignore
+        assert(promise2 instanceof Promise);
+    });
+    it('2.2.6 then可以在同一个promise里被多次调用', done => {
         const promise = new Promise(resolve => {
             resolve();
         });
@@ -171,5 +178,50 @@ describe('Promise', () => {
             done();
         });
     });
+    it('2.2.7.1  onFulfilled 返回的值x 运行[reslove](promise2,x)', done => {
+        const promise = new Promise((reslove) => {
+            reslove(333);
+        });
+        promise.then(res => {
+            assert.equal(res, 333);
+            return '成功';
+        }).then(result => {
+            assert.equal(result, '成功');
+            done();
+        });
+
+    });
+
+    it('2.2.7.1 success 返回值是一个promise实例',(done)=>{
+        const promise1 = new Promise(resolve => {
+            resolve();
+        });
+        const fn = sinon.fake();
+        const promise2 = promise1.then(
+            /*s1 */ () => new Promise(resolve => resolve())
+        );
+        promise2.then(fn);
+        setTimeout(() => {
+            assert(fn.called);
+            done();
+        });
+    })
+    it("2.2.7.1.2 success 的返回值是一个 Promise 实例，且失败了", done => {
+        const promise1 = new Promise(resolve => {
+            resolve();
+        });
+        const fn = sinon.fake();
+        const promise2 = promise1.then(
+            /*s1 */ () => new Promise((resolve, reject) => reject())
+        );
+        promise2.then(null, fn);
+        setTimeout(() => {
+            assert(fn.called);
+            done();
+        });
+    });
+
+
+
 });
 
