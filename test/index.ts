@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import Promise from '../src/promise';
 
 const assert = chai.assert;
-
+const expert = chai.expect;
 describe('Promise', () => {
     it('是一个类', () => {
         // assert.isFunction(Promise)
@@ -221,6 +221,16 @@ describe('Promise', () => {
         });
     });
 
+    it('x 与 promise引用同一个对象，抛出错误', done => {
+        const promise = new Promise(resolve => {
+            resolve();
+        }).then(res => promise, null);
+        promise.then(null, reason => {
+            assert(reason instanceof TypeError);
+            done();
+        });
+        // throw new Error()
+    });
 
 
 });

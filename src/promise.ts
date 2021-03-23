@@ -3,7 +3,6 @@ class Promise2 {
     fail = null;
     state = 'pending';
     callbacks = [];
-
     then(success?, fail?) {
         let handle = [];
         if (typeof success === 'function') {
@@ -22,15 +21,11 @@ class Promise2 {
     resolve(result) {
         if (this.state !== 'pending') return;
         this.state = 'fulfilled';
-
-
         process.nextTick(
             () => {
                 this.callbacks.forEach(item => {
                     let x;
                     if (typeof item[0] === 'function') x = item[0].call(undefined, result);
-                    console.log('resolve');
-                    console.log(x);
                     item[2].resolveWith(x);
                 });
             }
@@ -51,7 +46,6 @@ class Promise2 {
                 });
             }
             , 0);
-
     }
 
     constructor(fn) {
@@ -62,10 +56,37 @@ class Promise2 {
     }
 
     resolveWith(x) {
-        console.log('---');
-        console.log(x);
+        if (this === x) {
+            return this.reject(new TypeError('----'));
+        } else if (x instanceof Promise2) {
+            x.then(
+                result => {
+                    this.resolve(result);
+                },
+                reason => {
+                    this.reject(reason);
+                }
+            );
+        } else if (x instanceof Object) {
+            let then = x.then;
+            try {
 
-        this.resolve(x);
+            } catch (e) {
+                return this.reject(new TypeError(''));
+            }
+            if (then instanceof Function) {
+                then.call(x, (y) => {
+                    this.resolveWith(y);
+                }, (r) => {
+                    this.resolveWith(r);
+                });
+
+            } else {
+                this.resolve(x);
+            }
+        } else {
+            this.resolve(x);
+        }
     }
 
 }
